@@ -1,7 +1,17 @@
 {
-    "name": "your-name-here/CipherBehavior",
-    "description": "CipherBehavior plugin for CakePHP",
+    "name": "adayth/CipherBehavior",
+    "description": "Secure your DB data with CakePHP and this behavior",
+    "keywords": ["cakephp", "plugin", "cipher", "cypher", "crypt", "encrypt", "behaviors", "decrypt", "PCI Compliance"],
+    "homepage": "https://github.com/adayth/cakephp-cipher-behavior",
     "type": "cakephp-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aday Talavera Hierro",
+            "email": "aday.talavera@gmail.com",
+            "homepage": "http://adaytalavera.es"
+        }
+    ],
     "require": {
         "php": ">=5.4.16",
         "cakephp/cakephp": "~3.0"
