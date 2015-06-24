@@ -1,5 +1,5 @@
 {
-    "name": "adayth/cipher-behavior",
+    "name": "adayth/cakephp-cipher-behavior",
     "description": "Secure your DB data with CakePHP and this behavior",
     "keywords": ["cakephp", "plugin", "cipher", "cypher", "crypt", "encrypt", "behaviors", "decrypt", "PCI Compliance"],
     "homepage": "https://github.com/adayth/cakephp-cipher-behavior",
