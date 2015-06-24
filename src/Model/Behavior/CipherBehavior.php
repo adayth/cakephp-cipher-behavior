@@ -27,7 +27,8 @@ class CipherBehavior extends Behavior
         'salt' => null,
     ];
 
-    public function initialize(array $config) {
+    public function initialize(array $config) 
+    {
         if (empty($this->config('fields'))) {
             throw new \Cake\Core\Exception\Exception('Empty fields in CipherBehavior');
         }        
