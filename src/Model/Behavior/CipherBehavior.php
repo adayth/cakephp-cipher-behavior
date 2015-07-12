@@ -29,9 +29,11 @@ class CipherBehavior extends Behavior
 
     public function initialize(array $config) 
     {
-        if (empty($this->config('fields'))) {
+        $fields = $this->config('fields');
+        if (empty($fields)) {
             throw new \Cake\Core\Exception\Exception('Empty fields in CipherBehavior');
-        }        
+        }
+        
         foreach ($this->config('fields') as $fieldName => $fieldType) {            
             if (!is_string($fieldName) || !is_string($fieldType) || empty($fieldName) || empty($fieldType)) {
                 throw new \Cake\Core\Exception\Exception('Field type need to be specified in CypherBehavior fields');
@@ -43,14 +45,18 @@ class CipherBehavior extends Behavior
                 throw new \Cake\Core\Exception\Exception(sprintf('Field type %s not valid for field %s', $fieldType, $fieldName));
             }
         }
-        if (empty($this->config('key'))) {
+        
+        $key = $this->config('key');
+        if (empty($key)) {
             $key = Configure::read('App.Encrypt.key');
             if (empty($key)) {
                 throw new \Cake\Core\Exception\Exception('App.Encrypt.key config value is empty');
             }
             $this->config('key', $key);
         }
-        if (empty($this->config('salt'))) {
+        
+        $salt = $this->config('salt');
+        if (empty($salt)) {
             $salt = Configure::read('App.Encrypt.salt');
             if (empty($salt)) {
                 throw new \Cake\Core\Exception\Exception('App.Encrypt.salt config value is empty');
