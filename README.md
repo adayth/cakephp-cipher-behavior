@@ -65,15 +65,18 @@ Configure::write('App.Encrypt.key', 'your long not legible key');
 Configure::write('App.Encrypt.salt', 'your long not legible salt');
 ```
 
-To get a good pair of key and salt, you could use [Wordpress key/salt generator](https://api.wordpress.org/secret-key/1.1/salt/), 
+To get a good pair of key and salt, you could use [Wordpress key/salt generator](https://api.wordpress.org/secret-key/1.1/salt/),
 [Random Key Generator](http://randomkeygen.com/) or allow your cat/dog/insert your pet here to play with your keyboard a minute...
 
 ## Implementation notes
 The ciphering is done with *beforeSave and beforeFind* events, using CakePHP *Security* class *encrypt / decrypt* methods
-and `Cake\Database\Type` to convert data from and to DB to the right types. Type columns use is needed because all data is stored 
+and `Cake\Database\Type` to convert data from and to DB to the right types. Type columns use is needed because all data is stored
 and ciphered in DB in binary format. So before/after encrypt/decrypt casting types is needed.
 
-**Important:** Current tests only covers *string*, *integer* and *date* column types.
+**Important:**
+
+* Current tests only covers *string*, *integer*, *date* and *datetime* column types.
+* Encryption of empty values (null, false, '') could cause unexpected results.
 
 ## Support
 For bugs and feature requests, please use the [issues](https://github.com/adayth/cakephp-cipher-behavior/issues) section of this repository.

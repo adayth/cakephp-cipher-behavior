@@ -94,6 +94,16 @@ class CipherBehaviorTest extends TestCase
         $this->assertNotEquals($value, $cypherBehaviorInstance->encrypt($value));
     }
 
+    public function testEncryptEmpty()
+    {
+        $table = TableRegistry::get('BinaryValues');
+        $config = ['fields' => ['name' => 'string']];
+        $cypherBehaviorInstance = new CipherBehavior($table, $config);
+        $value = '';
+        $cryptedVal = $cypherBehaviorInstance->encrypt($value);
+        $this->assertEquals($value, $cypherBehaviorInstance->decrypt($cryptedVal));
+    }
+
     public function testDecrypt()
     {
         $table = TableRegistry::get('BinaryValues');
@@ -101,6 +111,16 @@ class CipherBehaviorTest extends TestCase
         $cypherBehaviorInstance = new CipherBehavior($table, $config);
         $value = 'foo value to be decrypted';
         $this->assertNotEquals($value, $cypherBehaviorInstance->decrypt($value));
+    }
+
+    public function testDecryptEmpty()
+    {
+        $this->setExpectedException('InvalidArgumentException');
+        $table = TableRegistry::get('BinaryValues');
+        $config = ['fields' => ['name' => 'string']];
+        $cypherBehaviorInstance = new CipherBehavior($table, $config);
+        $value = '';
+        $cypherBehaviorInstance->decrypt($value);
     }
 
     public function testCipher()
