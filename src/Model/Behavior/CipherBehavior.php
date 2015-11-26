@@ -123,15 +123,17 @@ class CipherBehavior extends Behavior
         $fields = $this->config('fields');
         $driver = $this->_table->connection()->driver();
 
-        $formatter = function (\Cake\Collection\CollectionInterface $results) use ($fields, $driver) {
-            return $results->each(function (Entity $entity) use ($fields, $driver) {
-                foreach ($fields as $field => $type) {
-                    if ($entity->has($field)) {
-                        $value = $entity->get($field);
-                        $decryptedValue = $this->decrypt($value);
-                        // Convert DB values to PHP values after decrypting them
-                        $entity->set($field, Type::build($type)->toPHP($decryptedValue, $driver));
-                        $entity->clean();
+        $formatter = function (\Cake\Collection\CollectionInterface $results) use ($fields, $driver) {            
+            return $results->each(function ($entity) use ($fields, $driver) {
+                if ($entity instanceof \Cake\Datasource\EntityInterface) {
+                    foreach ($fields as $field => $type) {
+                        if ($entity->has($field)) {
+                            $value = $entity->get($field);
+                            $decryptedValue = $this->decrypt($value);
+                            // Convert DB values to PHP values after decrypting them
+                            $entity->set($field, Type::build($type)->toPHP($decryptedValue, $driver));
+                            $entity->clean();
+                        }
                     }
                 }
             });
