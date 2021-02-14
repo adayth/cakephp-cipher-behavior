@@ -1,9 +1,15 @@
 <?php
+declare(strict_types=1);
+
 namespace CipherBehavior\Model\Behavior;
 
 use ArrayObject;
+use Cake\Collection\CollectionInterface;
 use Cake\Core\Configure;
+use Cake\Core\Exception\Exception;
+use Cake\Database\DriverInterface;
 use Cake\Database\Type;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
@@ -26,49 +32,54 @@ class CipherBehavior extends Behavior
         'key' => null,
         'salt' => null,
     ];
-    
+
     /**
      * Initialize behavior configuration
      * @param array $config Configuration passed to the behavior
-     * @throws \Cake\Core\Exception\Exception
      * @return void
+     * @throws Exception
      */
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $fields = $this->config('fields');
+        $fields = $this->getConfig('fields');
         if (empty($fields)) {
-            throw new \Cake\Core\Exception\Exception('Empty fields in CipherBehavior');
+            throw new Exception('Empty fields in CipherBehavior');
         }
-        
-        foreach ($this->config('fields') as $fieldName => $fieldType) {
+
+        foreach ($this->getConfig('fields') as $fieldName => $fieldType) {
             if (!is_string($fieldName) || !is_string($fieldType) || empty($fieldName) || empty($fieldType)) {
-                throw new \Cake\Core\Exception\Exception('Field type need to be specified in CypherBehavior fields');
+                throw new Exception('Field type need to be specified in CypherBehavior fields');
             }
             try {
                 // Throws exception if type is not valid
                 Type::build($fieldType);
             } catch (\InvalidArgumentException $ex) {
-                throw new \Cake\Core\Exception\Exception(sprintf('Field type %s not valid for field %s', $fieldType, $fieldName));
+                throw new Exception(sprintf('Field type %s not valid for field %s', $fieldType, $fieldName));
             }
         }
-        
-        $key = $this->config('key');
+
+        $key = $this->getConfig('key');
         if (empty($key)) {
             $key = Configure::read('App.Encrypt.key');
             if (empty($key)) {
-                throw new \Cake\Core\Exception\Exception('App.Encrypt.key config value is empty');
+                throw new Exception('App.Encrypt.key config value is empty');
             }
-            $this->config('key', $key);
+            $this->getConfig('key', $key);
         }
-        
-        $salt = $this->config('salt');
+
+        $salt = $this->getConfig('salt');
         if (empty($salt)) {
             $salt = Configure::read('App.Encrypt.salt');
             if (empty($salt)) {
-                throw new \Cake\Core\Exception\Exception('App.Encrypt.salt config value is empty');
+                throw new Exception('App.Encrypt.salt config value is empty');
             }
-            $this->config('salt', $salt);
+            $this->getConfig('salt', $salt);
         }
+    }
+
+    protected function getTableConnectionDriver(): DriverInterface
+    {
+        return $this->table()->getConnection()->getDriver();
     }
 
     /**
@@ -80,11 +91,11 @@ class CipherBehavior extends Behavior
     public function beforeSave(Event $event, Entity $entity)
     {
         $entity->_cyphered = [];
-        foreach ($this->config('fields') as $field => $type) {
+        foreach ($this->getConfig('fields') as $field => $type) {
             if ($entity->has($field)) {
                 $value = $entity->get($field);
                 // Convert values to db representation before encrypting them
-                $dbValue = Type::build($type)->toDatabase($value, $this->_table->connection()->driver());
+                $dbValue = Type::build($type)->toDatabase($value, $this->getTableConnectionDriver());
                 $cryptedValue = $this->encrypt($dbValue);
                 $entity->set($field, $cryptedValue);
                 $entity->_cyphered[$field] = $value;
@@ -115,17 +126,16 @@ class CipherBehavior extends Behavior
      * @param Event $event Event object
      * @param Query $query Query object
      * @param ArrayObject $options Query options array
-     * @param type $primary Root/associated query
      * @return void
      */
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(Event $event, Query $query, ArrayObject $options)
     {
-        $fields = $this->config('fields');
-        $driver = $this->_table->connection()->driver();
+        $fields = $this->getConfig('fields');
+        $driver = $this->getTableConnectionDriver();
 
-        $formatter = function (\Cake\Collection\CollectionInterface $results) use ($fields, $driver) {            
+        $formatter = function (CollectionInterface $results) use ($fields, $driver) {
             return $results->each(function ($entity) use ($fields, $driver) {
-                if ($entity instanceof \Cake\Datasource\EntityInterface) {
+                if ($entity instanceof EntityInterface) {
                     foreach ($fields as $field => $type) {
                         if ($entity->has($field)) {
                             $value = $entity->get($field);
@@ -151,7 +161,7 @@ class CipherBehavior extends Behavior
      */
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $fields = $this->config('fields');
+        $fields = $this->getConfig('fields');
 
         foreach ($fields as $field => $type) {
             if (isset($data[$field])) {
@@ -162,24 +172,25 @@ class CipherBehavior extends Behavior
 
     /**
      * Encrypt a value
-     * @param type $value Value to be encrypted
-     * @return type Encrypted value
+     * @param string $value Value to be encrypted
+     * @return string Encrypted value
      */
-    public function encrypt($value)
+    public function encrypt(string $value): string
     {
-        return Security::encrypt($value, $this->config('key'), $this->config('salt'));
+        return Security::encrypt($value, $this->getConfig('key'), $this->getConfig('salt'));
     }
 
     /**
      * Decrypt an encrypted value
-     * @param type $cryptedValue Value to be decrypted
-     * @return type Decrypted value
+     * @param resource|string $cryptedValue Value to be decrypted
+     * @return string
      */
-    public function decrypt($cryptedValue)
+    public function decrypt($cryptedValue): string
     {
         if (is_resource($cryptedValue)) {
             $cryptedValue = stream_get_contents($cryptedValue);
         }
-        return Security::decrypt($cryptedValue, $this->config('key'), $this->config('salt'));
+
+        return Security::decrypt($cryptedValue, $this->getConfig('key'), $this->getConfig('salt'));
     }
 }
